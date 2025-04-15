@@ -1,0 +1,172 @@
+/* Global styles */
+:root {
+  --primary-color: #007bff;
+  --secondary-color: #6c757d;
+  --success-color: #28a745;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #17a2b8;
+  --dark-color: #343a40;
+  --light-color: #f8f9fa;
+}
+
+body {
+  font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  transition: background-color 0.3s ease;
+}
+
+/* Custom Chinese font for headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
+}
+
+/* Navbar styles */
+.navbar-brand {
+  font-weight: bold;
+}
+
+.language-toggle {
+  margin-left: 10px;
+}
+
+/* Card styles */
+.card {
+  border-radius: 8px;
+  transition: transform 0.2s;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card-header {
+  font-weight: bold;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+/* Button styles */
+.btn {
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+  background-color: #0069d9;
+  border-color: #0062cc;
+}
+
+/* Upload area */
+.upload-area {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 30px;
+  text-align: center;
+  margin: 20px 0;
+  transition: all 0.3s;
+}
+
+.upload-area:hover {
+  border-color: var(--primary-color);
+}
+
+/* Result container */
+.result-container {
+  margin-top: 30px;
+}
+
+.result-image {
+  max-width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Table styles */
+.table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* License plate display */
+.license-plate {
+  background: #FFF;
+  border: 2px solid #000;
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-weight: bold;
+  display: inline-block;
+  margin: 5px 0;
+  font-family: 'Courier New', monospace;
+}
+
+/* Alert/notification styles */
+.alert {
+  border-radius: 6px;
+  padding: 10px 15px;
+  margin-bottom: 15px;
+}
+
+/* Loading spinner */
+.spinner-border {
+  margin: 0 auto;
+  display: block;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .card {
+    margin-bottom: 15px;
+  }
+  
+  .upload-area {
+    padding: 15px;
+  }
+}
+
+/* Dark mode styles */
+[data-bs-theme=dark] {
+  --primary-color: #0d6efd;
+  --dark-bg: #212529;
+  --dark-card-bg: #2c3034;
+  --dark-text: #f8f9fa;
+}
+
+[data-bs-theme=dark] .card {
+  background-color: var(--dark-card-bg);
+  color: var(--dark-text);
+}
+
+[data-bs-theme=dark] .upload-area {
+  border-color: #495057;
+}
+
+[data-bs-theme=dark] .license-plate {
+  background: #FFF;
+  color: #000;
+}
+
+/* Animations */
+.fade-in {
+  animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Chinese specific styles */
+.chinese-text {
+  font-family: 'Microsoft YaHei', SimHei, sans-serif;
+}

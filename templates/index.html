@@ -1,0 +1,159 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">
+                    {% if lang == 'zh' %}
+                    <i class="fas fa-camera me-2"></i>上传图像或视频进行检测
+                    {% else %}
+                    <i class="fas fa-camera me-2"></i>Upload Image or Video for Detection
+                    {% endif %}
+                </h3>
+            </div>
+            <div class="card-body">
+                <!-- Detection type selection -->
+                <div class="mb-4">
+                    <h5>{% if lang == 'zh' %}选择检测类型{% else %}Select Detection Type{% endif %}</h5>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="detection_type" id="licensePlateRadio" value="license_plate" checked>
+                        <label class="form-check-label" for="licensePlateRadio">
+                            {% if lang == 'zh' %}车牌识别{% else %}License Plate Recognition{% endif %}
+                        </label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="detection_type" id="laneIntrusionRadio" value="lane_intrusion">
+                        <label class="form-check-label" for="laneIntrusionRadio">
+                            {% if lang == 'zh' %}车道入侵检测{% else %}Lane Intrusion Detection{% endif %}
+                        </label>
+                    </div>
+                    
+                    <!-- Detection description -->
+                    <div id="detectionDescription" class="mt-2 text-muted small">
+                        <!-- Will be filled by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- File upload form -->
+                <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+                    <input type="hidden" id="selectedDetectionType" name="detection_type" value="license_plate">
+                    
+                    <div id="uploadArea" class="upload-area">
+                        <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-muted"></i>
+                        <h5>
+                            {% if lang == 'zh' %}
+                            拖拽文件到此处或点击选择文件
+                            {% else %}
+                            Drag & Drop files here or click to browse
+                            {% endif %}
+                        </h5>
+                        <p class="text-muted small">
+                            {% if lang == 'zh' %}
+                            支持的格式: .jpg, .jpeg, .png, .mp4, .avi
+                            {% else %}
+                            Supported formats: .jpg, .jpeg, .png, .mp4, .avi
+                            {% endif %}
+                        </p>
+                        <input type="file" id="fileInput" name="file" class="form-control" accept="image/*, video/*" style="display: none;">
+                        <button type="button" class="btn btn-outline-primary mt-2" onclick="document.getElementById('fileInput').click()">
+                            <i class="fas fa-folder-open me-2"></i>
+                            {% if lang == 'zh' %}浏览文件{% else %}Browse Files{% endif %}
+                        </button>
+                    </div>
+                    
+                    <!-- File preview -->
+                    <div id="uploadPreview" class="text-center mt-3" style="display: none;"></div>
+                    
+                    <!-- Progress bar -->
+                    <div id="progressContainer" class="progress mt-3" style="display: none;">
+                        <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    <!-- Submit button -->
+                    <div class="text-center mt-3">
+                        <button type="submit" class="btn btn-primary" id="uploadSubmitBtn">
+                            <i class="fas fa-upload me-2"></i>
+                            {% if lang == 'zh' %}上传并检测{% else %}Upload & Detect{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Features cards -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-id-card me-2"></i>
+                            {% if lang == 'zh' %}车牌识别{% else %}License Plate Recognition{% endif %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                {% if lang == 'zh' %}针对中国车牌格式优化{% else %}Optimized for Chinese license plate format{% endif %}
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                {% if lang == 'zh' %}使用YOLOv8进行车辆检测{% else %}Uses YOLOv8 for vehicle detection{% endif %}
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                {% if lang == 'zh' %}支持图像和视频输入{% else %}Supports both image and video input{% endif %}
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                {% if lang == 'zh' %}高精度字符识别{% else %}High-accuracy character recognition{% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-traffic-light me-2"></i>
+                            {% if lang == 'zh' %}车道入侵检测{% else %}Lane Intrusion Detection{% endif %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-warning me-2"></i>
+                                {% if lang == 'zh' %}检测车辆穿越车道{% else %}Detects vehicles crossing lanes{% endif %}
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-warning me-2"></i>
+                                {% if lang == 'zh' %}自动识别车道标记{% else %}Automatic lane marking recognition{% endif %}
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-warning me-2"></i>
+                                {% if lang == 'zh' %}记录违规车辆信息{% else %}Logs information about violating vehicles{% endif %}
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle text-warning me-2"></i>
+                                {% if lang == 'zh' %}适用于十字路口监控{% else %}Suitable for intersection monitoring{% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Update the hidden detection type field when radio buttons change
+    document.querySelectorAll('input[name="detection_type"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            document.getElementById('selectedDetectionType').value = this.value;
+        });
+    });
+</script>
+{% endblock %}

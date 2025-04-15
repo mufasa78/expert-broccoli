@@ -1,0 +1,149 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">
+                    <i class="fas fa-search me-2"></i>
+                    {% if lang == 'zh' %}
+                        {% if is_video %}视频处理{% else %}检测结果{% endif %}
+                    {% else %}
+                        {% if is_video %}Video Processing{% else %}Detection Results{% endif %}
+                    {% endif %}
+                </h3>
+            </div>
+            <div class="card-body">
+                {% if is_video %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        {% if lang == 'zh' %}
+                        视频文件已上传。点击下方按钮开始处理视频。
+                        {% else %}
+                        Video file has been uploaded. Click the button below to start processing the video.
+                        {% endif %}
+                    </div>
+                    
+                    {% if preview_path %}
+                    <div class="text-center mb-4">
+                        <img src="{{ url_for('static', filename=preview_path) }}" class="img-fluid rounded" alt="Video preview">
+                    </div>
+                    {% endif %}
+                    
+                    <div class="text-center">
+                        <button id="processVideoBtn" class="btn btn-primary" data-filepath="{{ file_path }}" data-detection-type="{{ detection_type }}">
+                            <i class="fas fa-play-circle me-2"></i>
+                            {% if lang == 'zh' %}开始处理视频{% else %}Start Processing Video{% endif %}
+                        </button>
+                    </div>
+                    
+                    <!-- Video progress bar -->
+                    <div id="videoProgressContainer" class="progress mt-4" style="display: none;">
+                        <div id="videoProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    <!-- Video results container -->
+                    <div id="videoResults" class="mt-4"></div>
+                {% else %}
+                    <!-- Image result -->
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="text-center">
+                                <img src="{{ url_for('static', filename=file_path) }}" class="img-fluid rounded result-image" alt="Detection result">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header {% if detection_type == 'license_plate' %}bg-success{% else %}bg-warning{% endif %} text-white">
+                                    <h5 class="mb-0">
+                                        {% if detection_type == 'license_plate' %}
+                                            <i class="fas fa-id-card me-2"></i>
+                                            {% if lang == 'zh' %}识别结果{% else %}Recognition Results{% endif %}
+                                        {% else %}
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            {% if lang == 'zh' %}入侵检测{% else %}Intrusion Detection{% endif %}
+                                        {% endif %}
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if detection_type == 'license_plate' and result and result.detections %}
+                                        <h6>
+                                            {% if lang == 'zh' %}检测到 {{ result.detections|length }} 个车辆{% else %}Detected {{ result.detections|length }} vehicles{% endif %}
+                                        </h6>
+                                        
+                                        <div class="mt-3">
+                                            {% for detection in result.detections %}
+                                                {% if detection.license_plate %}
+                                                    <div class="mb-3">
+                                                        <div class="license-plate">{{ detection.license_plate }}</div>
+                                                        <div class="small text-muted">
+                                                            {% if lang == 'zh' %}置信度{% else %}Confidence{% endif %}: {{ (detection.confidence * 100)|round(1) }}%
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    {% elif detection_type == 'lane_intrusion' and result %}
+                                        <h6>
+                                            {% if lang == 'zh' %}检测到 {{ result.vehicles|length|default(0) }} 个车辆{% else %}Detected {{ result.vehicles|length|default(0) }} vehicles{% endif %}
+                                        </h6>
+                                        
+                                        {% if result.intrusions %}
+                                            <div class="alert alert-danger mt-3">
+                                                {% if lang == 'zh' %}
+                                                发现 {{ result.intrusions|length }} 起车道入侵事件
+                                                {% else %}
+                                                Found {{ result.intrusions|length }} lane intrusion events
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="mt-3">
+                                                {% for intrusion in result.intrusions %}
+                                                    <div class="mb-2">
+                                                        <span class="badge bg-danger">
+                                                            {% if lang == 'zh' %}
+                                                            车辆 #{{ intrusion.vehicle_id }}: 从车道 {{ intrusion.from_lane + 1 }} 到车道 {{ intrusion.to_lane + 1 }}
+                                                            {% else %}
+                                                            Vehicle #{{ intrusion.vehicle_id }}: Lane {{ intrusion.from_lane + 1 }} to {{ intrusion.to_lane + 1 }}
+                                                            {% endif %}
+                                                        </span>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-success mt-3">
+                                                {% if lang == 'zh' %}
+                                                未检测到车道入侵事件
+                                                {% else %}
+                                                No lane intrusions detected
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <div class="alert alert-warning">
+                                            {% if lang == 'zh' %}
+                                            未检测到结果
+                                            {% else %}
+                                            No detections found
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Back button -->
+                <div class="text-center mt-4">
+                    <a href="/" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        {% if lang == 'zh' %}返回首页{% else %}Back to Home{% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
