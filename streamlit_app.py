@@ -1,4 +1,12 @@
 import streamlit as st
+
+# Set page config must be the first Streamlit command
+st.set_page_config(
+    page_title="Lane Intrusion Detection System",  # Default title before language is set
+    page_icon="🚗",
+    layout="wide"
+)
+
 import os
 import cv2
 import numpy as np
@@ -48,6 +56,7 @@ def get_binary_file_downloader_html(bin_file, file_label='File'):
     return href
 
 def main():
+    
     # Load models
     yolo_detector, license_plate_recognizer, lane_intrusion_detector = load_models()
     
@@ -75,13 +84,6 @@ def main():
     
     # Get current language
     lang = st.session_state['language']
-    
-    # Set page config
-    st.set_page_config(
-        page_title=get_text('app_title', lang),
-        page_icon="🚗",
-        layout="wide"
-    )
     
     # Main title
     st.title(get_text('app_title', lang))
@@ -334,7 +336,7 @@ def main():
                     intrusion_events = 0
                     
                     # Create columns for results
-                    col1, col2 = st.columns([2, it1])
+                    col1, col2 = st.columns([2, 1])
                     
                     with col1:
                         result_placeholder = st.empty()

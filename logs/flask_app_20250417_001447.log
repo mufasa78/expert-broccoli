@@ -1,0 +1,9 @@
+2025-04-17 00:14:47,534 - __main__ - INFO - Starting Flask application...
+2025-04-17 00:14:48,489 - __main__ - INFO - Package flask is installed.
+2025-04-17 00:14:49,970 - __main__ - INFO - Package flask_sqlalchemy is installed.
+2025-04-17 00:14:50,067 - __main__ - INFO - Package psycopg2 is installed.
+2025-04-17 00:14:50,072 - __main__ - ERROR - Package opencv-python is not installed.
+2025-04-17 00:14:50,483 - __main__ - INFO - Package numpy is installed.
+2025-04-17 00:14:50,484 - __main__ - ERROR - Missing required packages: opencv-python
+2025-04-17 00:14:50,485 - __main__ - ERROR - Please install the missing packages using: pip install -r requirements.txt
+2025-04-17 00:14:50,488 - __main__ - ERROR - Failed to start Flask application. Check the logs for details.

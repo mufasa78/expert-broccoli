@@ -1,0 +1,21 @@
+2025-04-17 00:16:10,030 - __main__ - INFO - Starting Flask application...
+2025-04-17 00:16:10,783 - __main__ - INFO - Package flask is installed.
+2025-04-17 00:16:12,051 - __main__ - INFO - Package flask_sqlalchemy is installed.
+2025-04-17 00:16:12,091 - __main__ - INFO - Package psycopg2 is installed.
+2025-04-17 00:16:12,492 - __main__ - INFO - Package numpy is installed.
+2025-04-17 00:16:12,705 - __main__ - INFO - Package opencv-python is installed.
+2025-04-17 00:16:14,632 - __main__ - INFO - Database connection successful. PostgreSQL version: PostgreSQL 17.4 on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2025-04-17 00:16:14,634 - __main__ - INFO - Templates directory found: C:\Users\Mufasa\Desktop\Work\Websites\Angelo\YOLO\LicensePlateReader\project\templates
+2025-04-17 00:16:14,635 - __main__ - INFO - Template files: detection_results.html, index.html, layout.html
+2025-04-17 00:16:14,635 - __main__ - INFO - Static directory found: C:\Users\Mufasa\Desktop\Work\Websites\Angelo\YOLO\LicensePlateReader\project\static
+2025-04-17 00:16:14,720 - detection.yolo_detector - INFO - Initialized simplified YOLO detector (demo mode)
+2025-04-17 00:16:14,722 - detection.license_plate_recognition - INFO - License plate recognizer initialized successfully
+2025-04-17 00:16:19,589 - __main__ - INFO - Flask app imported successfully.
+2025-04-17 00:16:19,590 - __main__ - INFO - Running Flask app...
+2025-04-17 00:16:19,684 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.101:5000
+2025-04-17 00:16:19,688 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-04-17 00:16:19,732 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-04-17 00:16:42,035 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)

@@ -1,0 +1,18 @@
+2025-04-17 00:16:42,424 - __main__ - INFO - Starting Flask application...
+2025-04-17 00:16:43,503 - __main__ - INFO - Package flask is installed.
+2025-04-17 00:16:44,840 - __main__ - INFO - Package flask_sqlalchemy is installed.
+2025-04-17 00:16:44,907 - __main__ - INFO - Package psycopg2 is installed.
+2025-04-17 00:16:45,898 - __main__ - INFO - Package numpy is installed.
+2025-04-17 00:16:46,208 - __main__ - INFO - Package opencv-python is installed.
+2025-04-17 00:16:48,044 - __main__ - INFO - Database connection successful. PostgreSQL version: PostgreSQL 17.4 on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2025-04-17 00:16:48,046 - __main__ - INFO - Templates directory found: C:\Users\Mufasa\Desktop\Work\Websites\Angelo\YOLO\LicensePlateReader\project\templates
+2025-04-17 00:16:48,048 - __main__ - INFO - Template files: detection_results.html, index.html, layout.html
+2025-04-17 00:16:48,048 - __main__ - INFO - Static directory found: C:\Users\Mufasa\Desktop\Work\Websites\Angelo\YOLO\LicensePlateReader\project\static
+2025-04-17 00:16:48,097 - detection.yolo_detector - INFO - Initialized simplified YOLO detector (demo mode)
+2025-04-17 00:16:48,102 - detection.license_plate_recognition - INFO - License plate recognizer initialized successfully
+2025-04-17 00:16:53,010 - __main__ - INFO - Flask app imported successfully.
+2025-04-17 00:16:53,025 - __main__ - INFO - Running Flask app...
+2025-04-17 00:16:53,149 - werkzeug - WARNING -  * Debugger is active!
+2025-04-17 00:16:53,208 - werkzeug - INFO -  * Debugger PIN: 126-292-831
+2025-04-17 00:16:55,091 - werkzeug - INFO - 127.0.0.1 - - [17/Apr/2025 00:16:55] "GET /?__debugger__=yes&cmd=resource&f=console.png&s=d4G458EpaLTgkQuTBYHy HTTP/1.1" 200 -
+2025-04-17 00:16:58,470 - werkzeug - INFO - 127.0.0.1 - - [17/Apr/2025 00:16:58] "GET /?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -

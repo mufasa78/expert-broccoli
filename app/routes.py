@@ -1,17 +1,19 @@
 import os
 import logging
-from flask import render_template, request, jsonify, redirect, url_for, flash, session
+from flask import render_template, request, jsonify, redirect, url_for, flash, session, current_app
 from werkzeug.utils import secure_filename
 import cv2
 import numpy as np
 import base64
-from main import app, db
-from models import DetectionResult, DetectionItem
+from models import db, DetectionResult, DetectionItem
 from i18n.translations import get_text
 from detection.yolo_detector import YOLODetector
 from detection.license_plate_recognition import LicensePlateRecognizer
 from detection.lane_intrusion import LaneIntrusionDetector
 from utils.helpers import process_image, save_detection_result
+
+# Get the app instance from app/__init__.py
+from app import app
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -40,9 +42,9 @@ def index():
     # Set default language to Chinese if not set
     if 'lang' not in session:
         session['lang'] = 'zh'
-    
-    return render_template('index.html', 
-                          title=get_text('app_title', session.get('lang', 'zh')), 
+
+    return render_template('index.html',
+                          title=get_text('app_title', session.get('lang', 'zh')),
                           lang=session.get('lang', 'zh'))
 
 @app.route('/switch_language/<lang>')
@@ -56,19 +58,19 @@ def upload_file():
     if 'file' not in request.files:
         flash(get_text('no_file_error', session.get('lang', 'zh')), 'danger')
         return redirect(request.url)
-    
+
     file = request.files['file']
     if file.filename == '':
         flash(get_text('no_file_selected_error', session.get('lang', 'zh')), 'danger')
         return redirect(request.url)
-    
+
     detection_type = request.form.get('detection_type', 'license_plate')
-    
+
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
-        
+
         try:
             if filepath.endswith(('.mp4', '.avi')):
                 # Process video (save first frame for preview)
@@ -81,7 +83,7 @@ def upload_file():
                 else:
                     preview_path = None
                 cap.release()
-                
+
                 # Create a detection record in the database
                 detection = DetectionResult(
                     filename=filename,
@@ -90,7 +92,7 @@ def upload_file():
                 )
                 db.session.add(detection)
                 db.session.commit()
-                
+
                 flash(get_text('video_processing_start', session.get('lang', 'zh')), 'info')
                 return render_template('detection_results.html',
                                       title=get_text('processing_video', session.get('lang', 'zh')),
@@ -101,12 +103,12 @@ def upload_file():
                                       lang=session.get('lang', 'zh'))
             else:
                 # Process image
-                result, output_image = process_image(filepath, detection_type, yolo_detector, 
+                result, output_image = process_image(filepath, detection_type, yolo_detector,
                                                    license_plate_recognizer, lane_intrusion_detector)
-                
+
                 result_path = save_detection_result(output_image, filename, app.config['UPLOAD_FOLDER'])
                 rel_result_path = result_path.replace('static/', '')
-                
+
                 # Create a detection record in the database
                 detection = DetectionResult(
                     filename=filename,
@@ -115,7 +117,7 @@ def upload_file():
                 )
                 db.session.add(detection)
                 db.session.flush()  # Get the ID without committing
-                
+
                 # Add detection items
                 if detection_type == 'license_plate' and 'detections' in result:
                     for item in result['detections']:
@@ -131,7 +133,7 @@ def upload_file():
                                 bbox_y2=bbox[3]
                             )
                             db.session.add(detection_item)
-                
+
                 elif detection_type == 'lane_intrusion' and 'intrusions' in result:
                     for item in result['intrusions']:
                         detection_item = DetectionItem(
@@ -145,9 +147,9 @@ def upload_file():
                             bbox_y2=item.get('vehicle_bbox', (0, 0, 0, 0))[3]
                         )
                         db.session.add(detection_item)
-                
+
                 db.session.commit()
-                
+
                 return render_template('detection_results.html',
                                       title=get_text('detection_results', session.get('lang', 'zh')),
                                       file_path=rel_result_path,
@@ -155,12 +157,12 @@ def upload_file():
                                       is_video=False,
                                       detection_type=detection_type,
                                       lang=session.get('lang', 'zh'))
-        
+
         except Exception as e:
             logger.error(f"Error processing file: {e}")
             flash(get_text('processing_error', session.get('lang', 'zh')) + f": {str(e)}", 'danger')
             return redirect(url_for('index'))
-    
+
     flash(get_text('invalid_file_error', session.get('lang', 'zh')), 'danger')
     return redirect(url_for('index'))
 
@@ -169,67 +171,67 @@ def api_detect():
     """API endpoint for detection"""
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
-    
+
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
-    
+
     detection_type = request.form.get('detection_type', 'license_plate')
-    
+
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
-        
+
         try:
             if filepath.endswith(('.mp4', '.avi')):
                 # For API, we'll process videos frame by frame
                 results = []
                 cap = cv2.VideoCapture(filepath)
                 frame_count = 0
-                
+
                 while cap.isOpened():
                     ret, frame = cap.read()
                     if not ret:
                         break
-                    
+
                     frame_count += 1
                     if frame_count % 10 != 0:  # Process every 10th frame to reduce load
                         continue
-                    
+
                     # Save frame temporarily
                     temp_frame_path = os.path.join(app.config['UPLOAD_FOLDER'], f"temp_frame_{frame_count}.jpg")
                     cv2.imwrite(temp_frame_path, frame)
-                    
+
                     # Process the frame
-                    result, _ = process_image(temp_frame_path, detection_type, yolo_detector, 
+                    result, _ = process_image(temp_frame_path, detection_type, yolo_detector,
                                              license_plate_recognizer, lane_intrusion_detector)
-                    
+
                     # Add frame info to result
                     result['frame'] = frame_count
                     results.append(result)
-                    
+
                     # Remove temporary frame file
                     os.remove(temp_frame_path)
-                
+
                 cap.release()
                 return jsonify({'type': 'video', 'results': results})
             else:
                 # Process image
-                result, output_image = process_image(filepath, detection_type, yolo_detector, 
+                result, output_image = process_image(filepath, detection_type, yolo_detector,
                                                   license_plate_recognizer, lane_intrusion_detector)
-                
+
                 # Convert output image to base64 for JSON response
                 _, buffer = cv2.imencode('.jpg', output_image)
                 img_str = base64.b64encode(buffer).decode('utf-8')
-                
+
                 result['image'] = img_str
                 return jsonify({'type': 'image', 'result': result})
-        
+
         except Exception as e:
             logger.error(f"API Error: {e}")
             return jsonify({'error': str(e)}), 500
-    
+
     return jsonify({'error': 'Invalid file type'}), 400
 
 @app.route('/process_video', methods=['POST'])
@@ -237,53 +239,53 @@ def process_video():
     """Process video file frame by frame and return results"""
     filepath = request.form.get('filepath')
     detection_type = request.form.get('detection_type', 'license_plate')
-    
+
     if not filepath:
         return jsonify({'error': 'No file path provided'}), 400
-    
+
     full_path = os.path.join('static', filepath)
-    
+
     if not os.path.exists(full_path):
         return jsonify({'error': 'File not found'}), 404
-    
+
     try:
         results = []
         detections_count = 0
-        
+
         cap = cv2.VideoCapture(full_path)
         frame_count = 0
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        
+
         # Find the database record for this video
         filename = os.path.basename(filepath)
         detection = DetectionResult.query.filter_by(filename=filename).first()
-        
+
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
                 break
-            
+
             frame_count += 1
             if frame_count % 10 != 0:  # Process every 10th frame
                 continue
-            
+
             # Save frame temporarily
             temp_frame_path = os.path.join(app.config['UPLOAD_FOLDER'], f"temp_frame_{frame_count}.jpg")
             cv2.imwrite(temp_frame_path, frame)
-            
+
             # Process the frame
-            result, output_frame = process_image(temp_frame_path, detection_type, yolo_detector, 
+            result, output_frame = process_image(temp_frame_path, detection_type, yolo_detector,
                                          license_plate_recognizer, lane_intrusion_detector)
-            
+
             # Save output frame
             result_path = os.path.join(app.config['UPLOAD_FOLDER'], f"result_frame_{frame_count}.jpg")
             cv2.imwrite(result_path, output_frame)
-            
+
             # Add frame info to result
             result['frame'] = frame_count
             result['frame_path'] = result_path.replace('static/', '')
             result['progress'] = int((frame_count / total_frames) * 100)
-            
+
             # Save to database if we have a detection record
             if detection:
                 if detection_type == 'license_plate' and 'detections' in result:
@@ -301,7 +303,7 @@ def process_video():
                                 bbox_y2=bbox[3]
                             )
                             db.session.add(detection_item)
-                
+
                 elif detection_type == 'lane_intrusion' and 'intrusions' in result:
                     for item in result['intrusions']:
                         detections_count += 1
@@ -316,26 +318,26 @@ def process_video():
                             bbox_y2=item.get('vehicle_bbox', (0, 0, 0, 0))[3]
                         )
                         db.session.add(detection_item)
-            
+
             results.append(result)
-            
+
             # Remove temporary frame file
             os.remove(temp_frame_path)
-        
+
         cap.release()
-        
+
         # Commit any database changes
         if detection:
             db.session.commit()
-        
+
         return jsonify({
-            'success': True, 
-            'results': results, 
+            'success': True,
+            'results': results,
             'total_frames': total_frames,
             'processed_frames': frame_count,
             'detections_count': detections_count
         })
-    
+
     except Exception as e:
         logger.error(f"Video processing error: {e}")
         return jsonify({'error': str(e)}), 500
