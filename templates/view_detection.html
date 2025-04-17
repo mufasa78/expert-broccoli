@@ -71,6 +71,13 @@
                         <h5>{% if lang == 'zh' %}检测结果图像{% else %}Detection Result Image{% endif %}</h5>
                         <div class="text-center">
                             <img src="{{ detection.result_path }}" class="img-fluid rounded result-image" alt="Detection result">
+                            <div class="mt-2 text-muted small">
+                                {% if lang == 'zh' %}
+                                    <i class="fas fa-info-circle"></i> 图像上已标注检测结果，包括边界框、车牌文本和置信度
+                                {% else %}
+                                    <i class="fas fa-info-circle"></i> Detection results are annotated on the image, including bounding boxes, license plate text, and confidence scores
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -80,7 +87,7 @@
                     <div class="row">
                         <div class="col-12">
                             <h5>{% if lang == 'zh' %}详细结果{% else %}Detailed Results{% endif %}</h5>
-                            
+
                             {% if detection.detection_type == 'license_plate' %}
                                 <div class="row">
                                     {% for item in detection.items %}
@@ -94,7 +101,7 @@
                                                         </div>
                                                         {% if item.bbox_x1 is not none %}
                                                             <div class="small text-muted mt-1">
-                                                                {% if lang == 'zh' %}位置{% else %}Position{% endif %}: 
+                                                                {% if lang == 'zh' %}位置{% else %}Position{% endif %}:
                                                                 ({{ item.bbox_x1 }}, {{ item.bbox_y1 }}) - ({{ item.bbox_x2 }}, {{ item.bbox_y2 }})
                                                             </div>
                                                         {% endif %}
@@ -126,7 +133,7 @@
                                                     </div>
                                                     {% if item.bbox_x1 is not none %}
                                                         <div class="small text-muted mt-1">
-                                                            {% if lang == 'zh' %}位置{% else %}Position{% endif %}: 
+                                                            {% if lang == 'zh' %}位置{% else %}Position{% endif %}:
                                                             ({{ item.bbox_x1 }}, {{ item.bbox_y1 }}) - ({{ item.bbox_x2 }}, {{ item.bbox_y2 }})
                                                         </div>
                                                     {% endif %}
