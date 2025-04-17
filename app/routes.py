@@ -79,7 +79,8 @@ def upload_file():
                 if ret:
                     preview_path = os.path.join(app.config['UPLOAD_FOLDER'], 'preview_' + filename.rsplit('.', 1)[0] + '.jpg')
                     cv2.imwrite(preview_path, frame)
-                    preview_path = preview_path.replace('static/', '')
+                    # Use relative path for URLs
+                    preview_path = '/static/uploads/' + os.path.basename(preview_path)
                 else:
                     preview_path = None
                 cap.release()
@@ -88,7 +89,7 @@ def upload_file():
                 detection = DetectionResult(
                     filename=filename,
                     detection_type=detection_type,
-                    result_path=filepath.replace('static/', '')
+                    result_path='/static/uploads/' + os.path.basename(filepath)
                 )
                 db.session.add(detection)
                 db.session.commit()
@@ -107,7 +108,7 @@ def upload_file():
                                                    license_plate_recognizer, lane_intrusion_detector)
 
                 result_path = save_detection_result(output_image, filename, app.config['UPLOAD_FOLDER'])
-                rel_result_path = result_path.replace('static/', '')
+                rel_result_path = '/static/uploads/' + os.path.basename(result_path)
 
                 # Create a detection record in the database
                 detection = DetectionResult(
@@ -283,7 +284,7 @@ def process_video():
 
             # Add frame info to result
             result['frame'] = frame_count
-            result['frame_path'] = result_path.replace('static/', '')
+            result['frame_path'] = '/static/uploads/' + os.path.basename(result_path)
             result['progress'] = int((frame_count / total_frames) * 100)
 
             # Save to database if we have a detection record
