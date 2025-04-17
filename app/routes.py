@@ -1,6 +1,9 @@
 import os
 import logging
-from flask import render_template, request, jsonify, redirect, url_for, flash, session, current_app
+import json
+import time
+from datetime import datetime
+from flask import render_template, request, jsonify, redirect, url_for, flash, session
 from werkzeug.utils import secure_filename
 import cv2
 import numpy as np
@@ -351,3 +354,154 @@ def detection_history():
                           title=get_text('detection_history', session.get('lang', 'zh')),
                           detections=detections,
                           lang=session.get('lang', 'zh'))
+
+@app.route('/view_detection/<int:detection_id>')
+def view_detection(detection_id):
+    """Display details for a specific detection"""
+    detection = DetectionResult.query.get_or_404(detection_id)
+    return render_template('view_detection.html',
+                          title=get_text('detection_details', session.get('lang', 'zh')),
+                          detection=detection,
+                          lang=session.get('lang', 'zh'))
+
+@app.route('/realtime')
+def realtime():
+    """Real-time detection page"""
+    return render_template('realtime.html',
+                          title=get_text('realtime_detection', session.get('lang', 'zh')),
+                          lang=session.get('lang', 'zh'))
+
+@app.route('/process_realtime', methods=['POST'])
+def process_realtime():
+    """Process a frame from the webcam"""
+    if 'image_data' not in request.form:
+        return jsonify({'error': 'No image data provided'}), 400
+
+    # Get image data from base64 string
+    image_data = request.form['image_data']
+    detection_type = request.form.get('detection_type', 'license_plate')
+    show_boxes = request.form.get('show_boxes', 'true').lower() == 'true'
+
+    # Remove data URL prefix
+    if image_data.startswith('data:image/jpeg;base64,'):
+        image_data = image_data.replace('data:image/jpeg;base64,', '')
+
+    try:
+        # Convert base64 to image
+        image_bytes = base64.b64decode(image_data)
+        nparr = np.frombuffer(image_bytes, np.uint8)
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        if image is None:
+            return jsonify({'error': 'Failed to decode image'}), 400
+
+        # Process the image
+        result, output_image = process_image(image, detection_type, yolo_detector,
+                                           license_plate_recognizer, lane_intrusion_detector)
+
+        # Convert output image to base64
+        _, buffer = cv2.imencode('.jpg', output_image)
+        output_base64 = base64.b64encode(buffer).decode('utf-8')
+
+        # Add processed image to result
+        result['processed_image'] = output_base64
+
+        return jsonify(result)
+
+    except Exception as e:
+        logger.error(f"Error processing realtime frame: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/save_capture', methods=['POST'])
+def save_capture():
+    """Save a captured frame from realtime detection"""
+    if 'image_data' not in request.form:
+        return jsonify({'error': 'No image data provided'}), 400
+
+    # Get data from request
+    image_data = request.form['image_data']
+    detection_type = request.form.get('detection_type', 'license_plate')
+    capture_id = request.form.get('capture_id', str(int(time.time())))
+    detection_data = request.form.get('detection_data')
+
+    # Remove data URL prefix
+    if image_data.startswith('data:image/jpeg;base64,'):
+        image_data = image_data.replace('data:image/jpeg;base64,', '')
+
+    try:
+        # Convert base64 to image
+        image_bytes = base64.b64decode(image_data)
+        nparr = np.frombuffer(image_bytes, np.uint8)
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        if image is None:
+            return jsonify({'error': 'Failed to decode image'}), 400
+
+        # Generate filename
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"realtime_{detection_type}_{timestamp}_{capture_id}.jpg"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+        # Save the image
+        cv2.imwrite(filepath, image)
+
+        # Create relative path for URL
+        rel_path = '/static/uploads/' + os.path.basename(filepath)
+
+        # Create a detection record in the database
+        detection = DetectionResult(
+            filename=filename,
+            detection_type=detection_type,
+            result_path=rel_path
+        )
+        db.session.add(detection)
+        db.session.flush()  # Get the ID without committing
+
+        # If we have detection data, add detection items
+        if detection_data:
+            try:
+                data = json.loads(detection_data)
+
+                if detection_type == 'license_plate' and 'detections' in data:
+                    for item in data['detections']:
+                        if 'license_plate' in item and item['license_plate']:
+                            bbox = item.get('bbox', (0, 0, 0, 0))
+                            detection_item = DetectionItem(
+                                detection_id=detection.id,
+                                license_plate=item['license_plate'],
+                                confidence=item.get('confidence', 0),
+                                bbox_x1=bbox[0],
+                                bbox_y1=bbox[1],
+                                bbox_x2=bbox[2],
+                                bbox_y2=bbox[3]
+                            )
+                            db.session.add(detection_item)
+
+                elif detection_type == 'lane_intrusion' and 'intrusions' in data:
+                    for item in data['intrusions']:
+                        detection_item = DetectionItem(
+                            detection_id=detection.id,
+                            vehicle_id=item.get('vehicle_id'),
+                            from_lane=item.get('from_lane'),
+                            to_lane=item.get('to_lane'),
+                            bbox_x1=item.get('vehicle_bbox', (0, 0, 0, 0))[0],
+                            bbox_y1=item.get('vehicle_bbox', (0, 0, 0, 0))[1],
+                            bbox_x2=item.get('vehicle_bbox', (0, 0, 0, 0))[2],
+                            bbox_y2=item.get('vehicle_bbox', (0, 0, 0, 0))[3]
+                        )
+                        db.session.add(detection_item)
+            except Exception as e:
+                logger.error(f"Error processing detection data: {e}")
+
+        # Commit the changes
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'image_path': rel_path,
+            'detection_id': detection.id
+        })
+
+    except Exception as e:
+        logger.error(f"Error saving capture: {e}")
+        return jsonify({'error': str(e)}), 500

@@ -1,0 +1,187 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">
+                    <i class="fas fa-video me-2"></i>
+                    {% if lang == 'zh' %}实时检测{% else %}Real-time Detection{% endif %}
+                </h3>
+            </div>
+            <div class="card-body">
+                <!-- Detection type selection -->
+                <div class="mb-4">
+                    <h5>{% if lang == 'zh' %}选择检测类型{% else %}Select Detection Type{% endif %}</h5>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="realtime_detection_type" id="realtimeLicensePlateRadio" value="license_plate" checked>
+                        <label class="form-check-label" for="realtimeLicensePlateRadio">
+                            {% if lang == 'zh' %}车牌识别{% else %}License Plate Recognition{% endif %}
+                        </label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="realtime_detection_type" id="realtimeLaneIntrusionRadio" value="lane_intrusion">
+                        <label class="form-check-label" for="realtimeLaneIntrusionRadio">
+                            {% if lang == 'zh' %}车道入侵检测{% else %}Lane Intrusion Detection{% endif %}
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Camera controls -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-secondary text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-cogs me-2"></i>
+                                    {% if lang == 'zh' %}相机控制{% else %}Camera Controls{% endif %}
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="cameraSelect" class="form-label">
+                                        {% if lang == 'zh' %}选择相机{% else %}Select Camera{% endif %}
+                                    </label>
+                                    <select class="form-select" id="cameraSelect">
+                                        <option value="0">
+                                            {% if lang == 'zh' %}默认相机{% else %}Default Camera{% endif %}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <button id="startCameraBtn" class="btn btn-success">
+                                        <i class="fas fa-play me-2"></i>
+                                        {% if lang == 'zh' %}启动相机{% else %}Start Camera{% endif %}
+                                    </button>
+                                    <button id="stopCameraBtn" class="btn btn-danger" disabled>
+                                        <i class="fas fa-stop me-2"></i>
+                                        {% if lang == 'zh' %}停止相机{% else %}Stop Camera{% endif %}
+                                    </button>
+                                    <button id="captureBtn" class="btn btn-primary" disabled>
+                                        <i class="fas fa-camera me-2"></i>
+                                        {% if lang == 'zh' %}捕获图像{% else %}Capture Image{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-sliders-h me-2"></i>
+                                    {% if lang == 'zh' %}处理设置{% else %}Processing Settings{% endif %}
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="processingInterval" class="form-label">
+                                        {% if lang == 'zh' %}处理间隔 (毫秒){% else %}Processing Interval (ms){% endif %}
+                                    </label>
+                                    <input type="range" class="form-range" id="processingInterval" min="100" max="2000" step="100" value="500">
+                                    <div class="text-center" id="intervalValue">500 ms</div>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="autoSaveSwitch" checked>
+                                    <label class="form-check-label" for="autoSaveSwitch">
+                                        {% if lang == 'zh' %}自动保存检测结果{% else %}Auto-save Detection Results{% endif %}
+                                    </label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="showBoundingBoxesSwitch" checked>
+                                    <label class="form-check-label" for="showBoundingBoxesSwitch">
+                                        {% if lang == 'zh' %}显示边界框{% else %}Show Bounding Boxes{% endif %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Camera feed and results -->
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header bg-dark text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-camera me-2"></i>
+                                    {% if lang == 'zh' %}相机画面{% else %}Camera Feed{% endif %}
+                                </h5>
+                            </div>
+                            <div class="card-body text-center">
+                                <div id="cameraContainer">
+                                    <video id="cameraFeed" autoplay playsinline style="width: 100%; max-height: 480px; display: none;"></video>
+                                    <canvas id="processingCanvas" style="width: 100%; max-height: 480px; display: none;"></canvas>
+                                    <div id="cameraPlaceholder" class="p-5 bg-light rounded text-center">
+                                        <i class="fas fa-video fa-3x mb-3 text-muted"></i>
+                                        <h5>
+                                            {% if lang == 'zh' %}
+                                            点击"启动相机"开始实时检测
+                                            {% else %}
+                                            Click "Start Camera" to begin real-time detection
+                                            {% endif %}
+                                        </h5>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-list-alt me-2"></i>
+                                    {% if lang == 'zh' %}实时结果{% else %}Live Results{% endif %}
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="liveResults" class="overflow-auto" style="max-height: 400px;">
+                                    <div class="text-center text-muted p-5">
+                                        <i class="fas fa-search fa-2x mb-3"></i>
+                                        <p>
+                                            {% if lang == 'zh' %}
+                                            启动相机后将在此处显示检测结果
+                                            {% else %}
+                                            Detection results will appear here after starting the camera
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent captures -->
+                <div class="mt-4">
+                    <h5>
+                        <i class="fas fa-images me-2"></i>
+                        {% if lang == 'zh' %}最近捕获{% else %}Recent Captures{% endif %}
+                    </h5>
+                    <div id="recentCaptures" class="row">
+                        <!-- Recent captures will be added here dynamically -->
+                        <div class="col-12 text-center text-muted p-5">
+                            <i class="fas fa-camera fa-2x mb-3"></i>
+                            <p>
+                                {% if lang == 'zh' %}
+                                捕获的图像将显示在此处
+                                {% else %}
+                                Captured images will appear here
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize realtime detection
+        initRealtimeDetection();
+    });
+</script>
+{% endblock %}

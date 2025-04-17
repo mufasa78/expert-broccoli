@@ -1,0 +1,153 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">
+                    <i class="fas fa-search me-2"></i>
+                    {% if lang == 'zh' %}检测详情{% else %}Detection Details{% endif %}
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>{% if lang == 'zh' %}基本信息{% else %}Basic Information{% endif %}</h5>
+                        <table class="table">
+                            <tr>
+                                <th>{% if lang == 'zh' %}ID{% else %}ID{% endif %}</th>
+                                <td>{{ detection.id }}</td>
+                            </tr>
+                            <tr>
+                                <th>{% if lang == 'zh' %}文件名{% else %}Filename{% endif %}</th>
+                                <td>{{ detection.filename }}</td>
+                            </tr>
+                            <tr>
+                                <th>{% if lang == 'zh' %}检测类型{% else %}Detection Type{% endif %}</th>
+                                <td>
+                                    {% if detection.detection_type == 'license_plate' %}
+                                        <span class="badge bg-success">
+                                            {% if lang == 'zh' %}车牌识别{% else %}License Plate{% endif %}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning">
+                                            {% if lang == 'zh' %}车道入侵{% else %}Lane Intrusion{% endif %}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>{% if lang == 'zh' %}检测时间{% else %}Detection Time{% endif %}</th>
+                                <td>{{ detection.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>{% if lang == 'zh' %}检测结果{% else %}Detection Results{% endif %}</h5>
+                        {% if detection.items %}
+                            <div class="alert alert-success">
+                                {% if lang == 'zh' %}
+                                共检测到 {{ detection.items|length }} 个结果
+                                {% else %}
+                                {{ detection.items|length }} results detected
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning">
+                                {% if lang == 'zh' %}
+                                未检测到结果
+                                {% else %}
+                                No results detected
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Detection Result Image -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5>{% if lang == 'zh' %}检测结果图像{% else %}Detection Result Image{% endif %}</h5>
+                        <div class="text-center">
+                            <img src="{{ detection.result_path }}" class="img-fluid rounded result-image" alt="Detection result">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detection Items -->
+                {% if detection.items %}
+                    <div class="row">
+                        <div class="col-12">
+                            <h5>{% if lang == 'zh' %}详细结果{% else %}Detailed Results{% endif %}</h5>
+                            
+                            {% if detection.detection_type == 'license_plate' %}
+                                <div class="row">
+                                    {% for item in detection.items %}
+                                        {% if item.license_plate %}
+                                            <div class="col-md-4 mb-3">
+                                                <div class="card">
+                                                    <div class="card-body text-center">
+                                                        <div class="license-plate mb-2">{{ item.license_plate }}</div>
+                                                        <div class="small text-muted">
+                                                            {% if lang == 'zh' %}置信度{% else %}Confidence{% endif %}: {{ (item.confidence * 100)|round(1) }}%
+                                                        </div>
+                                                        {% if item.bbox_x1 is not none %}
+                                                            <div class="small text-muted mt-1">
+                                                                {% if lang == 'zh' %}位置{% else %}Position{% endif %}: 
+                                                                ({{ item.bbox_x1 }}, {{ item.bbox_y1 }}) - ({{ item.bbox_x2 }}, {{ item.bbox_y2 }})
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {% elif detection.detection_type == 'lane_intrusion' %}
+                                <div class="row">
+                                    {% for item in detection.items %}
+                                        <div class="col-md-4 mb-3">
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <h6>
+                                                        {% if lang == 'zh' %}
+                                                        车辆 #{{ item.vehicle_id }}
+                                                        {% else %}
+                                                        Vehicle #{{ item.vehicle_id }}
+                                                        {% endif %}
+                                                    </h6>
+                                                    <div class="badge bg-danger mb-2">
+                                                        {% if lang == 'zh' %}
+                                                        从车道 {{ item.from_lane + 1 if item.from_lane is not none else '?' }} 到车道 {{ item.to_lane + 1 if item.to_lane is not none else '?' }}
+                                                        {% else %}
+                                                        Lane {{ item.from_lane + 1 if item.from_lane is not none else '?' }} to {{ item.to_lane + 1 if item.to_lane is not none else '?' }}
+                                                        {% endif %}
+                                                    </div>
+                                                    {% if item.bbox_x1 is not none %}
+                                                        <div class="small text-muted mt-1">
+                                                            {% if lang == 'zh' %}位置{% else %}Position{% endif %}: 
+                                                            ({{ item.bbox_x1 }}, {{ item.bbox_y1 }}) - ({{ item.bbox_x2 }}, {{ item.bbox_y2 }})
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="mt-4">
+                    <a href="{{ url_for('history') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        {% if lang == 'zh' %}返回历史记录{% else %}Back to History{% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
