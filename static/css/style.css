@@ -118,6 +118,14 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 3px;
 }
 
+.detection-image {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 /* Table styles */
 .table {
   border-radius: 8px;
@@ -130,16 +138,23 @@ h1, h2, h3, h4, h5, h6 {
 
 /* License plate display */
 .license-plate {
-  background: #FFF;
-  border: 2px solid #000;
-  border-radius: 4px;
-  padding: 5px 10px;
-  font-weight: bold;
   display: inline-block;
-  margin: 5px 0;
+  background-color: #28a745;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 1.1em;
+  margin: 0.5rem 0;
   font-family: 'Courier New', monospace;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   letter-spacing: 1px;
+}
+
+.confidence-score {
+  color: #666;
+  font-size: 0.9em;
+  margin-bottom: 0.5rem;
 }
 
 /* Alert/notification styles */

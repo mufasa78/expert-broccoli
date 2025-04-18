@@ -242,7 +242,7 @@ function setupVideoProcessing() {
             detectionsContainer.classList.add('row', 'mt-3');
 
             data.results.forEach(result => {
-                if (result.detections && result.detections.length > 0 || result.intrusions && result.intrusions.length > 0) {
+                if ((result.detections && result.detections.length > 0) || (result.intrusions && result.intrusions.length > 0)) {
                     const col = document.createElement('div');
                     col.classList.add('col-md-6', 'mb-3');
 
@@ -256,16 +256,21 @@ function setupVideoProcessing() {
 
                     // Card body with image and detections
                     const cardBody = document.createElement('div');
-                    cardBody.classList.add('card-body');
+                    cardBody.classList.add('card-body', 'text-center');
 
-                    // Add the frame image
+                    // Add the frame image with correct path
                     const img = document.createElement('img');
-                    img.classList.add('img-fluid', 'rounded', 'mb-2');
-                    img.src = '/static/' + result.frame_path;
+                    img.classList.add('img-fluid', 'rounded', 'mb-2', 'detection-image');
+                    // Ensure we use the correct static path
+                    img.src = result.frame_path.startsWith('/') ? result.frame_path : '/static/' + result.frame_path;
+                    img.onerror = function() {
+                        console.error('Failed to load image:', result.frame_path);
+                        this.alt = 'Error loading image';
+                    };
 
                     cardBody.appendChild(img);
 
-                    // Add detection/intrusion info
+                    // Add detection/intrusion info below the image
                     if (detectionType === 'license_plate' && result.detections) {
                         const detectionInfo = document.createElement('div');
                         detectionInfo.classList.add('mt-2');
@@ -273,27 +278,19 @@ function setupVideoProcessing() {
                         result.detections.forEach((detection, index) => {
                             if (detection.license_plate) {
                                 const plateDiv = document.createElement('div');
-                                plateDiv.classList.add('license-plate', 'mb-2');
+                                plateDiv.classList.add('license-plate', 'mb-2', 'mt-2');
                                 plateDiv.textContent = detection.license_plate;
+                                
+                                const confidenceDiv = document.createElement('div');
+                                confidenceDiv.classList.add('confidence-score');
+                                confidenceDiv.textContent = `${(detection.confidence * 100).toFixed(1)}%`;
+                                
                                 detectionInfo.appendChild(plateDiv);
+                                detectionInfo.appendChild(confidenceDiv);
                             }
                         });
 
                         cardBody.appendChild(detectionInfo);
-                    }
-
-                    if (detectionType === 'lane_intrusion' && result.intrusions) {
-                        const intrusionInfo = document.createElement('div');
-                        intrusionInfo.classList.add('mt-2');
-
-                        result.intrusions.forEach((intrusion, index) => {
-                            const intrusionDiv = document.createElement('div');
-                            intrusionDiv.classList.add('alert', 'alert-danger', 'mb-2', 'py-1');
-                            intrusionDiv.textContent = `${getTranslatedText('vehicle')} ${intrusion.vehicle_id}: ${getTranslatedText('lane')} ${intrusion.from_lane + 1} → ${intrusion.to_lane + 1}`;
-                            intrusionInfo.appendChild(intrusionDiv);
-                        });
-
-                        cardBody.appendChild(intrusionInfo);
                     }
 
                     card.appendChild(cardHeader);
@@ -311,8 +308,6 @@ function setupVideoProcessing() {
             }
 
             videoResults.appendChild(detectionsContainer);
-
-            // Hide progress bar when complete
             videoProgressContainer.style.display = 'none';
         })
         .catch(error => {
